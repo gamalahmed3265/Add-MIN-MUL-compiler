@@ -1,0 +1,62 @@
+import java.io.*;
+enum TokenType {NUM, ADD, MUL, EOF, ERROR}
+class Token{
+	TokenType type;
+	String text;
+	int begin;
+	int end;
+
+	public Token(TokenType type, String text,	int begin, int end){
+		this.type = type;
+		this.text = text;
+		this.begin = begin;
+		this.end = end;
+	}
+
+	public String toString(){
+		return String.format(" %S is %s starts at %s ends at %s", text, type, begin, end);
+	}
+}
+
+%%
+%class Lexer
+%public
+
+%function getNextToken
+%type Token
+
+%{
+
+	public static void main(String[] args) throws Exception{
+		String statement = "30 + 50 * 20";
+		StringReader r = new StringReader(statement);
+		Lexer l = new Lexer(r);
+		Token token;
+
+		while((token = l.getNextToken()).type != TokenType.EOF){
+
+			System.out.println(token);
+		}
+	} 
+
+%}
+
+%line
+%char
+
+%eofval{
+ 	return new Token(TokenType.EOF, yytext(), yychar, yychar + yytext().length());
+%eofval}
+
+ALPHA = [a-zA-Z]
+DIGIT = [0-9]
+DIGIT_WITHOUT_ZERO = [1-9]
+WS = [\t\n\r\f\ ]
+
+%%
+
+<YYINITIAL> 0|{DIGIT_WITHOUT_ZERO}{DIGIT}* {return new Token(TokenType.NUM, yytext(), yychar, yychar + yytext().length());}
+<YYINITIAL> "+" {return new Token(TokenType.ADD, yytext(), yychar, yychar + yytext().length());}
+<YYINITIAL> "*" {return new Token(TokenType.MUL, yytext(), yychar, yychar + yytext().length());}
+<YYINITIAL> {WS}* {}
+<YYINITIAL> . {return new Token(TokenType.ERROR, yytext(), yychar, yychar + yytext().length());}
